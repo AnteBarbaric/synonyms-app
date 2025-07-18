@@ -48,7 +48,6 @@ export default function SearchBox({ onSearchResult }: SearchBoxProps) {
     }
   };
 
-  // Create debounced search function
   const debouncedSearch = useCallback(
     debounce((searchValue: string) => {
       handleSearch(searchValue);
@@ -56,14 +55,12 @@ export default function SearchBox({ onSearchResult }: SearchBoxProps) {
     []
   );
 
-  // Cleanup debounced function on unmount
   useEffect(() => {
     return () => {
       debouncedSearch.cancel();
     };
   }, [debouncedSearch]);
 
-  // Handle Enter key press for immediate search
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -71,30 +68,26 @@ export default function SearchBox({ onSearchResult }: SearchBoxProps) {
     }
   };
 
-  // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
     
-    // Clear results immediately if input is empty
     if (!value.trim() || value.length > 100) {
       onSearchResult(null);
       setMessage('');
-      debouncedSearch.cancel(); // Cancel pending debounced search
+      debouncedSearch.cancel();
     } else {
-      debouncedSearch(value); // Trigger debounced search
+      debouncedSearch(value);
     }
   };
 
-  // Clear search
   const handleClear = () => {
     setSearchTerm('');
     onSearchResult(null);
     setMessage('');
-    debouncedSearch.cancel(); // Cancel any pending search
+    debouncedSearch.cancel();
   };
 
-  // Add new synonym pair
   const handleAddSynonym = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -124,7 +117,6 @@ export default function SearchBox({ onSearchResult }: SearchBoxProps) {
         setMessage(data.message);
         setNewWord('');
         setNewSynonym('');
-        // Refresh search if there's a current search term
         if (searchTerm) {
           handleSearch(searchTerm);
         }

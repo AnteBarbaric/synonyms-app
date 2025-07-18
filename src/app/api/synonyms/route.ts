@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
       } as AddSynonymResponse, { status: 400 });
     }
 
-    // Add the synonym pair
     addSynonym(word, synonym);
 
     return NextResponse.json({
@@ -55,7 +54,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error adding synonym:', error);
     
-    // Handle specific error messages
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
     
     return NextResponse.json({

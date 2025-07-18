@@ -1,5 +1,3 @@
-// Core types for the synonyms search tool
-
 export interface SynonymPair {
   word: string;
   synonym: string;
