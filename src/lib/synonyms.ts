@@ -1,4 +1,4 @@
-import { SynonymPair, SearchResult } from './types';
+import { SearchResult } from './types';
 
 class SynonymsStore {
   private synonyms: Map<string, Set<string>> = new Map();

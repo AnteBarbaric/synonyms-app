@@ -34,7 +34,7 @@ export default function SynonymsList({ result }: SynonymsListProps) {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-800 mb-2">
-            Synonyms for "{result.word}"
+            Synonyms for &quot;{result.word}&quot;
           </h3>
           <p className="text-sm text-gray-600">
             Found {result.synonyms.length} synonym{result.synonyms.length !== 1 ? 's' : ''}

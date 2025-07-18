@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { debounce } from 'lodash';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { SearchResult, AddSynonymResponse } from '@/lib/types';
 
 interface SearchBoxProps {
@@ -15,9 +14,10 @@ export default function SearchBox({ onSearchResult }: SearchBoxProps) {
   const [newSynonym, setNewSynonym] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [message, setMessage] = useState('');
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Search for synonyms
-  const handleSearch = async (word: string) => {
+  const handleSearch = useCallback(async (word: string) => {
     if (!word.trim()) {
       onSearchResult(null);
       setMessage('');
@@ -41,27 +41,35 @@ export default function SearchBox({ onSearchResult }: SearchBoxProps) {
         onSearchResult(null);
       }
     } catch (error) {
+      console.error('Error searching for synonyms:', error);
       setMessage('Error searching for synonyms');
       onSearchResult(null);
     } finally {
       setIsSearching(false);
     }
-  };
+  }, [onSearchResult]);
 
-  const debouncedSearch = useCallback(
-    debounce((searchValue: string) => {
-      handleSearch(searchValue);
-    }, 400),
-    []
-  );
+  const debouncedSearch = useCallback((searchValue: string) => {
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    
+    debounceRef.current = setTimeout(() => {
+      if (searchValue.trim() && searchValue.length <= 100) {
+        handleSearch(searchValue);
+      }
+    }, 400);
+  }, [handleSearch]);
 
   useEffect(() => {
     return () => {
-      debouncedSearch.cancel();
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
     };
-  }, [debouncedSearch]);
+  }, []);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       handleSearch(searchTerm);
@@ -75,7 +83,9 @@ export default function SearchBox({ onSearchResult }: SearchBoxProps) {
     if (!value.trim() || value.length > 100) {
       onSearchResult(null);
       setMessage('');
-      debouncedSearch.cancel();
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
     } else {
       debouncedSearch(value);
     }
@@ -85,7 +95,9 @@ export default function SearchBox({ onSearchResult }: SearchBoxProps) {
     setSearchTerm('');
     onSearchResult(null);
     setMessage('');
-    debouncedSearch.cancel();
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
   };
 
   const handleAddSynonym = async (e: React.FormEvent) => {
@@ -124,6 +136,7 @@ export default function SearchBox({ onSearchResult }: SearchBoxProps) {
         setMessage(data.message || 'Failed to add synonym');
       }
     } catch (error) {
+      console.error('Error adding synonym:', error);
       setMessage('Error adding synonym');
     } finally {
       setIsAdding(false);
@@ -141,6 +154,7 @@ export default function SearchBox({ onSearchResult }: SearchBoxProps) {
               type="text"
               value={searchTerm}
               onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
               placeholder="Start typing to search synonyms..."
               className="w-full px-4 py-3 border border-gray-500 rounded-lg focus:ring-2 focus:ring-blue-500 text-black focus:border-transparent outline-none transition-all"
             />
@@ -159,7 +173,7 @@ export default function SearchBox({ onSearchResult }: SearchBoxProps) {
         </div>
         {searchTerm && isSearching && (
           <p className="text-sm text-gray-500 mt-2">
-            Searching for "{searchTerm}"...
+            Searching for &quot;{searchTerm}&quot;...
           </p>
         )}
       </div>
