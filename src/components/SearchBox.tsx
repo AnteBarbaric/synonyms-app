@@ -8,13 +8,13 @@ interface SearchBoxProps {
 }
 
 export default function SearchBox({ onSearchResult }: SearchBoxProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [newWord, setNewWord] = useState('');
-  const [newSynonym, setNewSynonym] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
-  const [message, setMessage] = useState('');
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const [searchTerm, setSearchTerm] = useState(''); //trenutni unos
+  const [isSearching, setIsSearching] = useState(false); //stanje učitavanja pretrage
+  const [newWord, setNewWord] = useState(''); //polje za novu riječ u formi
+  const [newSynonym, setNewSynonym] = useState(''); //polje za novi sinonim
+  const [isAdding, setIsAdding] = useState(false); //stanje učitavanja za dodavanje
+  const [message, setMessage] = useState(''); //poruke korisniku
+  const debounceRef = useRef<NodeJS.Timeout | null>(null); //referenca na debounce timer
 
   // Search for synonyms
   const handleSearch = useCallback(async (word: string) => {
@@ -76,6 +76,7 @@ export default function SearchBox({ onSearchResult }: SearchBoxProps) {
     }
   };
 
+  //handler unosa
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
