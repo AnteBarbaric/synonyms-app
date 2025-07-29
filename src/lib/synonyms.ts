@@ -25,10 +25,20 @@ class SynonymsStore {
       throw new Error('Word and synonym cannot be the same');
     }
 
-    this.addToMap(normalizedWord, normalizedSynonym);
-    this.addToMap(normalizedSynonym, normalizedWord);
+    // Get all existing synonyms for both words before adding the new connection
+    const word1Group = this.getAllSynonymsInGroup(normalizedWord);
+    const word2Group = this.getAllSynonymsInGroup(normalizedSynonym);
 
-    this.applyTransitiveRules(normalizedWord, normalizedSynonym);
+    // Combine both groups + the original words
+    const allWords = new Set([
+      normalizedWord,
+      normalizedSynonym,
+      ...word1Group,
+      ...word2Group
+    ]);
+
+    // Connect every word to every other word in the combined group
+    this.connectAllWords(allWords);
   }
 
   searchSynonyms(word: string): SearchResult {
@@ -52,23 +62,46 @@ class SynonymsStore {
     this.synonyms.get(word)!.add(synonym);
   }
 
-  private applyTransitiveRules(word1: string, word2: string): void {
-    const word1Synonyms = this.synonyms.get(word1) || new Set();
-    const word2Synonyms = this.synonyms.get(word2) || new Set();
-
-    word2Synonyms.forEach(synonym => {
-      if (synonym !== word1) {
-        this.addToMap(word1, synonym);
-        this.addToMap(synonym, word1);
+  private getAllSynonymsInGroup(word: string): Set<string> {
+    const visited = new Set<string>();
+    const toVisit = [word];
+    
+    while (toVisit.length > 0) {
+      const currentWord = toVisit.pop()!;
+      
+      if (visited.has(currentWord)) {
+        continue;
       }
-    });
+      
+      visited.add(currentWord);
+      
+      // Get direct synonyms of current word
+      const directSynonyms = this.synonyms.get(currentWord) || new Set();
+      
+      // Add unvisited synonyms to the queue
+      directSynonyms.forEach(synonym => {
+        if (!visited.has(synonym)) {
+          toVisit.push(synonym);
+        }
+      });
+    }
+    
+    // Remove the original word from the result
+    visited.delete(word);
+    return visited;
+  }
 
-    word1Synonyms.forEach(synonym => {
-      if (synonym !== word2) {
-        this.addToMap(word2, synonym);
-        this.addToMap(synonym, word2);
+  private connectAllWords(words: Set<string>): void {
+    const wordArray = Array.from(words);
+    
+    // For each word, connect it to all other words
+    for (let i = 0; i < wordArray.length; i++) {
+      for (let j = 0; j < wordArray.length; j++) {
+        if (i !== j) {
+          this.addToMap(wordArray[i], wordArray[j]);
+        }
       }
-    });
+    }
   }
 }
 
